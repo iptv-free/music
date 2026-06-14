@@ -664,10 +664,26 @@ body{
 
 <script>
 // ===== CONFIG =====
-const PLAYLIST_URL = "./playlist/uzbek.m3u";
+const PLAYLIST_URL = './playlist/uzbek.m3u'; // Fayl manzili
 const PAGE_SIZE = 20;
 const FAV_KEY = "uzmusic_favorites";
 const FAV_CACHE = 'uzmusic-fav-audio-v1';
+
+// Ro'yxatni yuklash funksiyasi
+async function loadPlaylist() {
+    try {
+        const response = await fetch(PLAYLIST_URL);
+        if (!response.ok) throw new Error("Fayl topilmadi: " + response.status);
+        
+        const data = await response.text(); // .m3u fayllari odatda matnli bo'ladi
+        console.log("Playlist yuklandi:", data);
+        // Bu yerda data'ni tahlil qilib (parse), ekranga chiqaradigan kodlaringiz bo'lishi kerak
+    } catch (error) {
+        console.error("Xatolik:", error);
+    }
+}
+
+loadPlaylist();
 
 // ===== STATE =====
 let tracks = [];
