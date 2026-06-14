@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="uz" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0c0b10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Uzbek Music">
+<title>Uzbek Music</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== THEMES ===== */
+:root{
+  --bg:#0c0b10;--panel:#151320;--panel-2:#1d1a2b;--line:#2a2740;
+  --text:#f1eef9;--muted:#8d87a8;--accent:#f5b942;--accent-soft:#3a2f1c;
+  --purple:#8b6cff;--good:#5fe3a1;--fs:1rem;
+}
+[data-theme="ocean"]{--bg:#071525;--panel:#0d2137;--panel-2:#0f2d4a;--line:#1a3d5c;--text:#e8f4ff;--muted:#6a9bbf;--purple:#3b9eff;--accent:#f5b942;}
+[data-theme="rose"]{--bg:#160d10;--panel:#22111a;--panel-2:#2d1624;--line:#3d1f30;--text:#fce8f0;--muted:#a06080;--purple:#e05585;--accent:#f5c842;}
+[data-theme="forest"]{--bg:#0a1208;--panel:#111f0d;--panel-2:#162910;--line:#1e3a18;--text:#e8f5e0;--muted:#6a9b5a;--purple:#4caf50;--accent:#f5c842;}
+[data-theme="sand"]{--bg:#1a1510;--panel:#241e16;--panel-2:#2e271c;--line:#3d3328;--text:#f5ede0;--muted:#a09070;--purple:#c8a050;--accent:#e8703a;}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:var(--fs);
+  display:flex;flex-direction:column;
+}
+
+/* ===== PAGE SYSTEM ===== */
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{
+  position:absolute;inset:0;
+  overflow-y:auto;
+  padding:16px 16px 90px;
+  display:none;
+  flex-direction:column;
+}
+.page.active{display:flex;}
+
+/* ===== OFFLINE BANNER ===== */
+.offline-banner{
+  background:#c0392b;color:#fff;
+  text-align:center;font-family:'Space Grotesk',sans-serif;font-size:0.78rem;
+  padding:5px;z-index:200;display:none;flex-shrink:0;
+}
+.offline-banner.show{display:block;}
+
+/* ===== TOP HEADER ===== */
+.top-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;flex-shrink:0;
+  border-bottom:1px solid var(--line);
+}
+.app-title{font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:700;}
+.app-title span{color:var(--accent);}
+.header-right{display:flex;gap:8px;align-items:center;}
+
+/* ===== SEARCH ===== */
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--muted);fill:none;pointer-events:none;}
+.search-wrap input{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:11px 36px 11px 38px;color:var(--text);font-family:'Inter',sans-serif;
+  font-size:0.9rem;outline:none;transition:border-color .15s;
+}
+.search-wrap input::placeholder{color:var(--muted);}
+.search-wrap input:focus{border-color:var(--purple);}
+.search-clear{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;border:none;background:var(--panel-2);border-radius:50%;
+  color:var(--muted);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:0.85rem;
+}
+.search-wrap input:not(:placeholder-shown) ~ .search-clear{display:flex;}
+
+/* ===== SECTION TABS (Bo'lim ichida) ===== */
+.section-tabs{
+  display:flex;gap:6px;margin-bottom:14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;
+}
+.stab{
+  flex:1;border:none;background:transparent;color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;font-size:0.78rem;font-weight:600;
+  padding:8px 4px;border-radius:8px;cursor:pointer;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.stab.active{background:var(--panel-2);color:var(--text);}
+.stab svg{width:14px;height:14px;flex-shrink:0;}
+
+/* ===== TRACKLIST ===== */
+.tracklist{display:flex;flex-direction:column;gap:7px;}
+.track{
+  display:grid;grid-template-columns:38px 1fr auto auto;
+  align-items:center;gap:8px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;transition:border-color .15s;
+}
+.track:hover{border-color:#3c3760;}
+.track.playing{border-color:var(--purple);background:linear-gradient(90deg,rgba(139,108,255,0.10),var(--panel) 60%);}
+.play-btn{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--text);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;flex-shrink:0;transition:.15s;
+}
+.play-btn:hover{border-color:var(--purple);}
+.track.playing .play-btn{background:var(--purple);border-color:var(--purple);}
+.play-btn svg{width:15px;height:15px;}
+.meta{min-width:0;}
+.meta .name{
+  font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.88rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.meta .sub{font-size:0.72rem;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;}
+.eq{display:flex;align-items:flex-end;gap:2px;height:10px;}
+.eq span{width:2px;background:var(--good);border-radius:1px;animation:eqbar 1s ease-in-out infinite;}
+.eq span:nth-child(1){height:40%;animation-delay:0s;}
+.eq span:nth-child(2){height:100%;animation-delay:.15s;}
+.eq span:nth-child(3){height:60%;animation-delay:.3s;}
+.eq span:nth-child(4){height:80%;animation-delay:.45s;}
+@keyframes eqbar{0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);}}
+.heart-btn{
+  width:36px;height:36px;border:none;background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  transition:.15s;flex-shrink:0;position:relative;
+}
+.heart-btn:hover{background:var(--accent-soft);}
+.heart-btn svg{width:19px;height:19px;stroke:var(--muted);fill:none;transition:.15s;}
+.heart-btn.liked svg{stroke:var(--accent);fill:var(--accent);}
+@keyframes pop{50%{transform:scale(1.25);}}
+.heart-btn.liked{animation:pop .25s ease;}
+.cache-dot{
+  position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;
+  border-radius:50%;background:var(--good);border:2px solid var(--bg);display:none;
+}
+.heart-btn.cached .cache-dot{display:block;}
+.dl-btn{
+  width:36px;height:36px;border:none;background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  transition:.15s;flex-shrink:0;color:var(--muted);text-decoration:none;
+}
+.dl-btn:hover{background:rgba(139,108,255,0.15);color:var(--purple);}
+.dl-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;}
+
+/* ===== STATE ===== */
+.state{text-align:center;padding:50px 20px;color:var(--muted);font-family:'Space Grotesk',sans-serif;}
+.spinner{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 14px;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.state.error{color:#f87171;}
+.state a{color:var(--purple);}
+
+/* ===== PAGINATION ===== */
+.pagination{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:20px;flex-wrap:wrap;}
+.page-btn{
+  min-width:36px;height:36px;border-radius:8px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text);font-family:'Space Grotesk',sans-serif;
+  font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;padding:0 8px;transition:.15s;
+}
+.page-btn:hover:not(:disabled){border-color:var(--purple);}
+.page-btn.active{background:var(--purple);border-color:var(--purple);}
+.page-btn:disabled{opacity:0.35;cursor:not-allowed;}
+.page-dots{color:var(--muted);padding:0 4px;font-family:'Space Grotesk',sans-serif;}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav{
+  display:flex;align-items:stretch;
+  background:rgba(21,19,32,0.97);
+  backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  flex-shrink:0;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  z-index:60;
+}
+.nav-btn{
+  flex:1;border:none;background:transparent;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:10px 4px 8px;cursor:pointer;transition:.15s;position:relative;
+  font-family:'Space Grotesk',sans-serif;font-size:0.62rem;font-weight:600;letter-spacing:0.3px;
+}
+.nav-btn svg{width:22px;height:22px;}
+.nav-btn.active{color:var(--purple);}
+.nav-btn.active::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2px;background:var(--purple);border-radius:0 0 2px 2px;
+}
+
+/* ===== MINI PLAYER BAR ===== */
+.mini-bar{
+  position:fixed;bottom:calc(58px + env(safe-area-inset-bottom,0px));left:0;right:0;
+  background:rgba(21,19,32,0.97);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:9px 14px;display:flex;align-items:center;gap:10px;
+  transform:translateY(100%);transition:transform .25s ease;z-index:55;cursor:pointer;
+}
+.mini-bar.show{transform:translateY(0);}
+.mini-prog{position:absolute;top:0;left:0;right:0;height:2px;background:var(--line);}
+.mini-prog-fill{height:100%;background:var(--purple);width:0%;transition:width 0.5s linear;}
+.mini-info{flex:1;min-width:0;}
+.mini-info .mlabel{font-size:0.62rem;color:var(--accent);font-family:'Space Grotesk',sans-serif;letter-spacing:1px;text-transform:uppercase;}
+.mini-info .mname{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mini-controls{display:flex;gap:5px;align-items:center;}
+.mini-controls button{
+  width:32px;height:32px;border:none;background:var(--panel-2);color:var(--text);
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.mini-controls button:hover{background:var(--purple);}
+.mini-controls svg{width:14px;height:14px;}
+
+/* ===== PLAYER MODAL ===== */
+.player-overlay{
+  position:fixed;inset:0;background:rgba(8,7,14,0.78);backdrop-filter:blur(6px);
+  z-index:100;display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s ease;
+}
+.player-overlay.open{opacity:1;pointer-events:all;}
+.player-modal{
+  width:100%;max-width:500px;background:var(--panel);border:1px solid var(--line);
+  border-bottom:none;border-radius:24px 24px 0 0;padding:18px 16px 32px;
+  transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);
+  padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));
+}
+.player-overlay.open .player-modal{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 18px;cursor:pointer;}
+.modal-title-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.modal-track-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;line-height:1.3;flex:1;padding-right:10px;}
+.modal-close{width:30px;height:30px;border:none;background:var(--panel-2);color:var(--muted);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;transition:.15s;}
+.modal-close:hover{color:var(--text);}
+.progress-wrap{position:relative;height:34px;display:flex;align-items:center;cursor:pointer;margin-bottom:4px;}
+.progress-track{width:100%;height:4px;background:var(--line);border-radius:2px;position:relative;overflow:hidden;}
+.progress-fill{height:100%;background:var(--purple);border-radius:2px;width:0%;pointer-events:none;transition:width 0.4s linear;}
+.progress-wrap:hover .progress-track{height:6px;}
+.progress-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;background:#fff;border-radius:50%;left:0%;box-shadow:0 0 0 3px rgba(139,108,255,0.4);pointer-events:none;opacity:0;transition:opacity .15s;}
+.progress-wrap:hover .progress-thumb{opacity:1;}
+.time-row{display:flex;justify-content:space-between;font-family:'Space Grotesk',sans-serif;font-size:0.7rem;color:var(--muted);margin-bottom:18px;}
+.modal-controls{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:nowrap;overflow-x:auto;padding:2px 0;scrollbar-width:none;}
+.modal-controls::-webkit-scrollbar{display:none;}
+.mc-btn{border:none;background:var(--panel-2);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;}
+.mc-btn:hover{background:#2e2b45;color:var(--text);}
+.mc-btn.active{color:var(--purple);background:rgba(139,108,255,0.15);}
+.mc-btn svg{width:15px;height:15px;}
+.mc-btn-main{width:50px;height:50px;background:var(--purple);color:#fff;border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;box-shadow:0 4px 18px rgba(139,108,255,0.4);}
+.mc-btn-main:hover{background:#7a5de8;}
+.mc-btn-main svg{width:20px;height:20px;}
+.mc-btn-skip{width:38px;height:38px;background:var(--panel-2);color:var(--text);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;flex-direction:column;gap:1px;}
+.mc-btn-skip:hover{background:#2e2b45;}
+.mc-btn-skip svg{width:13px;height:13px;}
+.skip-label{font-size:0.5rem;color:var(--muted);font-family:'Space Grotesk',sans-serif;font-weight:700;}
+
+@media (max-width:380px){
+  .player-modal{padding-left:12px;padding-right:12px;}
+  .modal-controls{gap:2px;}
+  .mc-btn{width:30px;height:30px;}
+  .mc-btn svg{width:13px;height:13px;}
+  .mc-btn-main{width:46px;height:46px;}
+  .mc-btn-main svg{width:18px;height:18px;}
+  .mc-btn-skip{width:34px;height:34px;}
+  .mc-btn-skip svg{width:12px;height:12px;}
+}
+
+/* ===== VISUAL EQUALIZER (canvas bars) ===== */
+.visual-eq{
+  width:100%;height:64px;margin-bottom:14px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(139,108,255,0.08),transparent);
+  overflow:hidden;position:relative;
+}
+.visual-eq canvas{display:block;width:100%;height:100%;}
+
+/* ===== EQUALIZER TOGGLE BUTTON ===== */
+.eq-toggle-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  margin-top:16px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+  padding:11px;color:var(--text);font-family:'Space Grotesk',sans-serif;
+  font-size:0.85rem;font-weight:600;cursor:pointer;transition:.15s;
+}
+.eq-toggle-btn:hover{border-color:var(--purple);}
+.eq-toggle-btn.active{color:var(--purple);border-color:var(--purple);background:rgba(139,108,255,0.1);}
+.eq-toggle-btn svg{width:17px;height:17px;}
+
+/* ===== EQUALIZER PANEL ===== */
+.eq-panel{
+  max-height:0;overflow:hidden;transition:max-height .3s ease;
+}
+.eq-panel.open{max-height:420px;}
+.eq-presets{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;padding-bottom:2px;
+}
+.eq-preset-btn{
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;font-size:0.72rem;font-weight:600;
+  padding:7px 12px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.eq-preset-btn:hover{border-color:var(--purple);}
+.eq-preset-btn.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+.eq-sliders{
+  display:flex;justify-content:space-between;gap:4px;margin-top:18px;padding:6px 2px 8px;
+}
+.eq-band{
+  display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;
+}
+.eq-band-value{font-family:'Space Grotesk',sans-serif;font-size:0.65rem;color:var(--purple);font-weight:700;min-height:14px;}
+.eq-slider-wrap{height:110px;display:flex;align-items:center;justify-content:center;width:100%;}
+.eq-band input[type="range"]{
+  width:110px;height:6px;
+  transform:rotate(-90deg);
+  background:var(--line);border-radius:4px;outline:none;cursor:pointer;accent-color:var(--purple);
+  -webkit-appearance:none;appearance:none;
+}
+.eq-band input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--purple);cursor:pointer;border:2px solid var(--text);
+}
+.eq-band input[type="range"]::-moz-range-thumb{
+  width:16px;height:16px;border-radius:50%;
+  background:var(--purple);cursor:pointer;border:2px solid var(--text);
+}
+.eq-band-label{font-family:'Space Grotesk',sans-serif;font-size:0.62rem;color:var(--muted);font-weight:600;text-align:center;}
+.eq-reset-btn{
+  width:100%;margin-top:14px;background:transparent;border:1px solid var(--line);
+  border-radius:10px;padding:10px;color:var(--muted);font-family:'Space Grotesk',sans-serif;
+  font-size:0.78rem;font-weight:600;cursor:pointer;transition:.15s;
+}
+.eq-reset-btn:hover{border-color:#f87171;color:#f87171;}
+
+/* ===== SOZLAMALAR PAGE ===== */
+.settings-section{margin-bottom:24px;}
+.settings-title{font-family:'Space Grotesk',sans-serif;font-size:0.72rem;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;padding:0 4px;}
+.settings-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.settings-row{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid var(--line);transition:.15s;
+}
+.settings-row:last-child{border-bottom:none;}
+.settings-row:hover{background:var(--panel-2);}
+.settings-icon{width:36px;height:36px;border-radius:10px;background:var(--panel-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.settings-icon svg{width:18px;height:18px;}
+.settings-label{flex:1;font-family:'Space Grotesk',sans-serif;font-size:0.9rem;font-weight:600;}
+.settings-sub{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+.settings-arrow{color:var(--muted);}
+
+/* THEME GRID */
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.theme-opt{
+  border:2px solid var(--line);border-radius:12px;padding:10px 4px 8px;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;
+  transition:.15s;background:transparent;
+}
+.theme-opt.active{border-color:var(--purple);}
+.theme-dot{width:28px;height:28px;border-radius:50%;}
+.theme-name{font-family:'Space Grotesk',sans-serif;font-size:0.68rem;font-weight:600;color:var(--muted);}
+.theme-opt.active .theme-name{color:var(--text);}
+
+/* FONT SIZE */
+.font-row{display:flex;align-items:center;gap:10px;padding:0 4px;}
+.font-btn{
+  width:36px;height:36px;border:1px solid var(--line);border-radius:8px;
+  background:var(--panel);color:var(--text);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.font-btn:hover{border-color:var(--purple);}
+.font-preview{flex:1;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:0.85rem;color:var(--muted);}
+
+/* LANG TOGGLE */
+.lang-toggle{display:flex;gap:6px;}
+.lang-btn{
+  padding:6px 16px;border:1px solid var(--line);border-radius:8px;
+  background:transparent;color:var(--muted);font-family:'Space Grotesk',sans-serif;
+  font-size:0.82rem;font-weight:600;cursor:pointer;transition:.15s;
+}
+.lang-btn.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+
+/* TG BUTTON */
+.tg-btn{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(135deg,#2ca5e0,#1a89c8);
+  border:none;border-radius:14px;padding:14px 18px;width:100%;cursor:pointer;
+  color:#fff;font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:600;
+  transition:.15s;text-decoration:none;
+}
+.tg-btn:hover{opacity:0.9;}
+.tg-btn svg{width:24px;height:24px;flex-shrink:0;}
+
+/* ===== BOLIM PAGE ===== */
+.bolim-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;}
+.btab{
+  flex:1;border:none;background:transparent;color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;font-size:0.75rem;font-weight:600;
+  padding:8px 4px;border-radius:8px;cursor:pointer;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.btab.active{background:var(--panel-2);color:var(--text);}
+.btab svg{width:13px;height:13px;flex-shrink:0;}
+.btab .bcount{background:rgba(139,108,255,0.15);color:var(--purple);font-size:0.65rem;padding:1px 6px;border-radius:999px;font-weight:700;}
+
+/* OFFLINE EMPTY */
+.offline-empty{text-align:center;padding:50px 20px;color:var(--muted);font-family:'Space Grotesk',sans-serif;}
+.offline-empty svg{width:48px;height:48px;stroke:var(--line);fill:none;margin:0 auto 14px;display:block;}
+.offline-empty h3{color:var(--text);margin-bottom:8px;}
+
+/* OFFLINE TOOLBAR */
+.offline-toolbar{margin-bottom:12px;}
+.add-files-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  background:var(--panel);border:1px dashed var(--purple);border-radius:12px;
+  padding:13px;color:var(--purple);font-family:'Space Grotesk',sans-serif;
+  font-size:0.88rem;font-weight:600;cursor:pointer;transition:.15s;
+}
+.add-files-btn:hover{background:rgba(139,108,255,0.1);}
+.add-files-btn svg{width:18px;height:18px;}
+.local-remove-btn{
+  width:36px;height:36px;border:none;background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  color:var(--muted);transition:.15s;flex-shrink:0;
+}
+.local-remove-btn:hover{background:rgba(248,113,113,0.12);color:#f87171;}
+.local-remove-btn svg{width:18px;height:18px;}
+
+/* ===== PWA BANNER ===== */
+.pwa-banner{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+  padding:11px 14px;margin-bottom:14px;display:none;align-items:center;gap:10px;
+  font-family:'Space Grotesk',sans-serif;font-size:0.8rem;
+}
+.pwa-banner.show{display:flex;}
+.pwa-banner button{border:none;background:var(--purple);color:#fff;padding:6px 12px;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+.pwa-banner .pwa-dismiss{background:transparent;color:var(--muted);padding:6px;font-size:1rem;}
+.pwa-info{flex:1;color:var(--muted);}
+.pwa-info strong{color:var(--text);display:block;margin-bottom:1px;}
+
+/* CACHING SPINNER */
+@keyframes cachespin{to{transform:rotate(360deg);}}
+.cache-spin{width:9px;height:9px;border:2px solid var(--line);border-top-color:var(--good);border-radius:50%;animation:cachespin 0.8s linear infinite;display:inline-block;vertical-align:middle;}
+</style>
+</head>
+<body>
+
+<div class="offline-banner" id="offline-banner">📵 Internet yo'q — faqat saqlangan qo'shiqlar ishlaydi</div>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="app-title">Uzbek <span>Music</span></div>
+  <div class="header-right" id="header-info" style="font-family:'Space Grotesk',sans-serif;font-size:0.72rem;color:var(--muted);"></div>
+</div>
+
+<!-- PAGES -->
+<div class="pages">
+
+  <!-- ===== HOME PAGE ===== -->
+  <div class="page active" id="page-home">
+    <div class="pwa-banner" id="pwa-banner">
+      <div class="pwa-info"><strong>📲 O'rnatish</strong>Offline uchun telefonga qo'shing</div>
+      <button onclick="installPWA()">O'rnatish</button>
+      <button class="pwa-dismiss" onclick="dismissPWA()">✕</button>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Qo'shiq qidirish..." oninput="onSearch(this.value,'home')">
+      <button class="search-clear" onclick="clearSearch('home')">✕</button>
+    </div>
+    <div id="home-content"><div class="state"><div class="spinner"></div>Yuklanmoqda...</div></div>
+    <div class="pagination" id="home-pagination"></div>
+  </div>
+
+  <!-- ===== BOLIM PAGE ===== -->
+  <div class="page" id="page-bolim">
+    <div class="bolim-tabs">
+      <button class="btab active" data-btab="internet" onclick="switchBtab('internet')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Internetdan
+      </button>
+      <button class="btab" data-btab="offline" onclick="switchBtab('offline')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Telefon xotirasi
+        <span class="bcount" id="offline-count">0</span>
+      </button>
+      <button class="btab" data-btab="fav" onclick="switchBtab('fav')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Sevimlilar
+        <span class="bcount" id="fav-count">0</span>
+      </button>
+    </div>
+
+    <!-- Internet tab -->
+    <div id="btab-internet">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="search-bolim" placeholder="Qidirish..." oninput="onSearch(this.value,'bolim')">
+        <button class="search-clear" onclick="clearSearch('bolim')">✕</button>
+      </div>
+      <div id="bolim-content"><div class="state"><div class="spinner"></div>Yuklanmoqda...</div></div>
+      <div class="pagination" id="bolim-pagination"></div>
+    </div>
+
+    <!-- Offline tab -->
+    <div id="btab-offline" style="display:none;">
+      <div class="offline-toolbar">
+        <button class="add-files-btn" onclick="pickLocalFiles()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Papka tanlash
+        </button>
+        <input type="file" id="local-file-input" accept="audio/*" multiple webkitdirectory directory style="display:none" onchange="onLocalFilesPicked(event)">
+      </div>
+      <div id="offline-content"></div>
+    </div>
+
+    <!-- Fav tab -->
+    <div id="btab-fav" style="display:none;">
+      <div id="fav-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== SOZLAMALAR PAGE ===== -->
+  <div class="page" id="page-sozlamalar">
+
+    <!-- RANG -->
+    <div class="settings-section">
+      <div class="settings-title">🎨 Rang mavzusi</div>
+      <div class="theme-grid">
+        <button class="theme-opt active" data-theme="default" onclick="setTheme('default',this)">
+          <div class="theme-dot" style="background:linear-gradient(135deg,#8b6cff,#0c0b10)"></div>
+          <span class="theme-name">Standart</span>
+        </button>
+        <button class="theme-opt" data-theme="ocean" onclick="setTheme('ocean',this)">
+          <div class="theme-dot" style="background:linear-gradient(135deg,#3b9eff,#071525)"></div>
+          <span class="theme-name">Okean</span>
+        </button>
+        <button class="theme-opt" data-theme="rose" onclick="setTheme('rose',this)">
+          <div class="theme-dot" style="background:linear-gradient(135deg,#e05585,#160d10)"></div>
+          <span class="theme-name">Atirgul</span>
+        </button>
+        <button class="theme-opt" data-theme="forest" onclick="setTheme('forest',this)">
+          <div class="theme-dot" style="background:linear-gradient(135deg,#4caf50,#0a1208)"></div>
+          <span class="theme-name">O'rmon</span>
+        </button>
+        <button class="theme-opt" data-theme="sand" onclick="setTheme('sand',this)">
+          <div class="theme-dot" style="background:linear-gradient(135deg,#c8a050,#1a1510)"></div>
+          <span class="theme-name">Qum</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TELEGRAM -->
+    <div class="settings-section">
+      <div class="settings-title">📬 Bog'lanish</div>
+      <a class="tg-btn" href="https://t.me/yourusername" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.869 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.83.941z"/></svg>
+        Telegram orqali bog'lanish
+      </a>
+    </div>
+
+    <!-- ILOVA HAQIDA -->
+    <div class="settings-section">
+      <div class="settings-title">ℹ️ Ilova haqida</div>
+      <div class="settings-card">
+        <div class="settings-row">
+          <div class="settings-icon" style="background:rgba(139,108,255,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div><div class="settings-label">Uzbek Music</div><div class="settings-sub">Versiya 2.0</div></div>
+        </div>
+        <div class="settings-row" id="cache-info-row">
+          <div class="settings-icon" style="background:rgba(95,227,161,0.12);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div><div class="settings-label">Saqlangan qo'shiqlar</div><div class="settings-sub" id="cache-size-text">Hisoblanmoqda...</div></div>
+        </div>
+        <div class="settings-row" style="cursor:pointer;" onclick="clearAllCache()">
+          <div class="settings-icon" style="background:rgba(248,113,113,0.12);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </div>
+          <div><div class="settings-label" style="color:#f87171;">Keshni tozalash</div><div class="settings-sub">Saqlangan qo'shiqlar o'chadi</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MINI BAR -->
+<div class="mini-bar" id="mini-bar" onclick="openPlayer()">
+  <div class="mini-prog"><div class="mini-prog-fill" id="mini-fill"></div></div>
+  <div class="mini-info">
+    <div class="mlabel">Ijro etilmoqda</div>
+    <div class="mname" id="mini-name">—</div>
+  </div>
+  <div class="mini-controls" onclick="event.stopPropagation()">
+    <button onclick="prevTrack()" title="Oldingi"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+    <button onclick="togglePlay()" id="mini-play-btn"><svg viewBox="0 0 24 24" fill="currentColor" id="mini-play-icon"><path d="M8 5v14l11-7z"/></svg></button>
+    <button onclick="nextTrack()" title="Keyingi"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+  </div>
+</div>
+
+<!-- PLAYER MODAL -->
+<div class="player-overlay" id="player-overlay" onclick="closePlayer()">
+  <div class="player-modal" onclick="event.stopPropagation()">
+    <div class="modal-handle" onclick="closePlayer()"></div>
+    <div class="modal-title-row">
+      <div class="modal-track-name" id="modal-track-name">—</div>
+      <button class="modal-close" onclick="closePlayer()">✕</button>
+    </div>
+
+    <!-- VISUAL EQUALIZER -->
+    <div class="visual-eq" id="visual-eq">
+      <canvas id="eq-canvas"></canvas>
+    </div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-thumb" id="progress-thumb"></div>
+    </div>
+    <div class="time-row"><span id="time-cur">0:00</span><span id="time-dur">0:00</span></div>
+    <div class="modal-controls">
+      <button class="mc-btn" id="btn-shuffle" onclick="toggleShuffle()" title="Tasodifiy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+      </button>
+      <button class="mc-btn-skip" onclick="skipBy(-10)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span class="skip-label">10s</span></button>
+      <button class="mc-btn-skip" onclick="prevTrack()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="mc-btn-main" onclick="togglePlay()" id="modal-play-btn"><svg viewBox="0 0 24 24" fill="currentColor" id="modal-play-icon"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="mc-btn-skip" onclick="nextTrack()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+      <button class="mc-btn-skip" onclick="skipBy(10)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg><span class="skip-label">10s</span></button>
+      <button class="mc-btn" id="btn-repeat" onclick="toggleRepeat()" title="Qaytarish">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+    </div>
+
+    <!-- EQUALIZER TOGGLE -->
+    <button class="eq-toggle-btn" id="eq-toggle-btn" onclick="toggleEqPanel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      Ekvalayzer
+    </button>
+
+    <!-- EQUALIZER PANEL -->
+    <div class="eq-panel" id="eq-panel">
+      <div class="eq-presets" id="eq-presets"></div>
+      <div class="eq-sliders" id="eq-sliders"></div>
+      <button class="eq-reset-btn" onclick="resetEqualizer()">Bekor qilish (Flat)</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="goPage('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" id="nav-bolim" onclick="goPage('bolim')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Bo'lim
+  </button>
+  <button class="nav-btn" id="nav-sozlamalar" onclick="goPage('sozlamalar')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Sozlamalar
+  </button>
+</div>
+
+<audio id="audio"></audio>
+<audio id="audio-eq" crossorigin="anonymous" style="display:none"></audio>
+
+<script>
+// ===== CONFIG =====
+const PLAYLIST_URL = "https://zuno.surge.sh/playlist/uzbek.m3u";
+const PAGE_SIZE = 20;
+const FAV_KEY = "uzmusic_favorites";
+const FAV_CACHE = 'uzmusic-fav-audio-v1';
+
+// ===== STATE =====
+let tracks = [];
+let currentPage_home = 1;
+let currentPage_bolim = 1;
+let currentIndex = -1;
+let isPlaying = false;
+let searchQuery_home = "";
+let searchQuery_bolim = "";
+let shuffleOn = false;
+let repeatMode = 0;
+let shuffleOrder = [];
+let cachedUrls = new Set();
+let deferredInstallPrompt = null;
+let currentBtab = 'internet';
+let currentTheme = localStorage.getItem('theme') || 'default';
+let activePage = 'home';
+let localTracks = [];
+let currentLocalId = null;
+
+// ===== i18n (faqat o'zbekcha) =====
+const T = {
+  loading:'Yuklanmoqda...', noResult:'Hech narsa topilmadi', noFav:'Sevimlilar bo\'sh',
+  saved:'💾 Saqlangan', offline:'Offline rejim', noInternet:'Internet yo\'q',
+  playing:'Ijro etilmoqda', songs:'ta qo\'shiq', page:'sahifa', from:'tadan',
+  cacheCleared:'Kesh tozalandi!', confirmClear:'Barcha saqlangan qo\'shiqlar o\'chirilsinmi?'
+};
+function t(key){ return T[key] || key; }
+
+// ===== INIT THEME =====
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme === 'default' ? '' : theme);
+}
+applyTheme(currentTheme);
+// mark active theme button
+document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === currentTheme));
+
+// ===== PWA =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(()=>{
+    refreshCachedUrls();
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data && e.data.type === 'CACHED_URLS'){
+      cachedUrls = new Set(e.data.urls);
+      renderAll();
+      updateCacheCounts();
+    }
+  });
+}
+function swMsg(data){
+  if(!('serviceWorker' in navigator)) return;
+  if(navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage(data);
+  } else {
+    navigator.serviceWorker.ready.then(reg=>{
+      if(reg.active) reg.active.postMessage(data);
+    }).catch(()=>{});
+  }
+}
+function refreshCachedUrls(){ swMsg({type:'GET_CACHED_URLS'}); }
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredInstallPrompt = e;
+  if(!localStorage.getItem('pwa_dismissed'))
+    document.getElementById('pwa-banner').classList.add('show');
+});
+function installPWA(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(()=>document.getElementById('pwa-banner').classList.remove('show'));
+}
+function dismissPWA(){
+  document.getElementById('pwa-banner').classList.remove('show');
+  localStorage.setItem('pwa_dismissed','1');
+}
+
+// ===== OFFLINE BANNER =====
+function updateOnlineStatus(){
+  document.getElementById('offline-banner').classList.toggle('show', !navigator.onLine);
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ===== NAVIGATION =====
+function goPage(name){
+  activePage = name;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + name).classList.add('active');
+  if(name === 'bolim') renderBtab();
+  if(name === 'sozlamalar') updateCacheInfo();
+}
+
+// ===== BOLIM TABS =====
+function switchBtab(tab){
+  currentBtab = tab;
+  document.querySelectorAll('.btab').forEach(b => b.classList.toggle('active', b.dataset.btab === tab));
+  ['internet','offline','fav'].forEach(t => {
+    document.getElementById('btab-'+t).style.display = t===tab ? '' : 'none';
+  });
+  renderBtab();
+}
+function renderBtab(){
+  if(currentBtab === 'internet') renderList('bolim');
+  else if(currentBtab === 'offline') renderOfflineTab();
+  else if(currentBtab === 'fav') renderFavTab();
+}
+
+// ===== TELEFON XOTIRASI (mahalliy fayllar) =====
+const LOCAL_DB_NAME = 'uzmusic_local_files';
+const LOCAL_STORE = 'files';
+let localDB = null;
+
+function openLocalDB(){
+  return new Promise((resolve, reject)=>{
+    if(localDB){ resolve(localDB); return; }
+    const req = indexedDB.open(LOCAL_DB_NAME, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(LOCAL_STORE)){
+        db.createObjectStore(LOCAL_STORE, {keyPath:'id'});
+      }
+    };
+    req.onsuccess = ()=>{ localDB = req.result; resolve(localDB); };
+    req.onerror = ()=> reject(req.error);
+  });
+}
+
+async function loadLocalTracks(){
+  try{
+    const db = await openLocalDB();
+    const items = await new Promise((resolve, reject)=>{
+      const tx = db.transaction(LOCAL_STORE, 'readonly');
+      const store = tx.objectStore(LOCAL_STORE);
+      const all = [];
+      const cursorReq = store.openCursor();
+      cursorReq.onsuccess = (e)=>{
+        const cursor = e.target.result;
+        if(cursor){ all.push(cursor.value); cursor.continue(); }
+        else resolve(all);
+      };
+      cursorReq.onerror = ()=> reject(cursorReq.error);
+    });
+    localTracks = items.map(it=>({
+      id: it.id,
+      title: it.title,
+      url: URL.createObjectURL(it.blob)
+    }));
+    if(currentBtab==='offline') renderOfflineTab();
+    updateCacheCounts();
+  }catch(e){
+    console.error('localDB load error', e);
+  }
+}
+
+function pickLocalFiles(){
+  document.getElementById('local-file-input').click();
+}
+
+async function onLocalFilesPicked(event){
+  const allFiles = Array.from(event.target.files || []);
+  const files = allFiles.filter(f => /\.(mp3|m4a|wav|ogg|aac|flac)$/i.test(f.name) || f.type.startsWith('audio/'));
+  if(!files.length){ event.target.value=''; return; }
+  try{
+    const db = await openLocalDB();
+    for(const file of files){
+      const id = 'local_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+      const title = file.name.replace(/\.[^.]+$/, '');
+      await new Promise((resolve, reject)=>{
+        const tx = db.transaction(LOCAL_STORE, 'readwrite');
+        tx.objectStore(LOCAL_STORE).put({id, title, blob:file});
+        tx.oncomplete = resolve;
+        tx.onerror = ()=> reject(tx.error);
+      });
+    }
+    await loadLocalTracks();
+  }catch(e){
+    alert('Faylni saqlashda xatolik yuz berdi');
+    console.error(e);
+  }
+  event.target.value = '';
+}
+
+async function removeLocalTrack(id){
+  if(!confirm("Bu qo'shiqni telefon xotirasidan o'chirishni xohlaysizmi?")) return;
+  try{
+    const db = await openLocalDB();
+    await new Promise((resolve, reject)=>{
+      const tx = db.transaction(LOCAL_STORE, 'readwrite');
+      tx.objectStore(LOCAL_STORE).delete(id);
+      tx.oncomplete = resolve;
+      tx.onerror = ()=> reject(tx.error);
+    });
+    const removed = localTracks.find(t=>t.id===id);
+    if(removed) URL.revokeObjectURL(removed.url);
+    if(currentLocalId===id){
+      audio.pause();
+      currentLocalId=null;
+    }
+    await loadLocalTracks();
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function playLocalTrack(id){
+  const track = localTracks.find(t=>t.id===id);
+  if(!track) return;
+  if(currentLocalId===id && !audio.paused){ audio.pause(); return; }
+  currentLocalId = id;
+  currentIndex = -1;
+  audio.src = track.url;
+  audio.play().catch(()=>{});
+  miniName.textContent = track.title;
+  modalTrackName.textContent = track.title;
+  miniBar.classList.add('show');
+}
+
+function nextLocalTrack(){
+  if(!localTracks.length) return;
+  const pos = localTracks.findIndex(t=>t.id===currentLocalId);
+  let nextPos;
+  if(repeatMode===1) nextPos = (pos+1)%localTracks.length;
+  else nextPos = Math.min(pos+1, localTracks.length-1);
+  if(pos===-1) nextPos = 0;
+  playLocalTrack(localTracks[nextPos].id);
+}
+
+function prevLocalTrack(){
+  if(!localTracks.length) return;
+  if(audio.currentTime>3){ audio.currentTime=0; return; }
+  const pos = localTracks.findIndex(t=>t.id===currentLocalId);
+  let prevPos = pos<=0 ? 0 : pos-1;
+  playLocalTrack(localTracks[prevPos].id);
+}
+
+// ===== SETTINGS =====
+function setTheme(theme, btn){
+  currentTheme = theme;
+  localStorage.setItem('theme', theme);
+  applyTheme(theme);
+  document.querySelectorAll('.theme-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+async function clearAllCache(){
+  if(!confirm(t('confirmClear'))) return;
+  const cache = await caches.open(FAV_CACHE);
+  const keys = await cache.keys();
+  await Promise.all(keys.map(k => cache.delete(k)));
+  cachedUrls.clear();
+  renderAll();
+  updateCacheCounts();
+  updateCacheInfo();
+  alert(t('cacheCleared'));
+}
+async function updateCacheInfo(){
+  try{
+    const cache = await caches.open(FAV_CACHE);
+    const keys = await cache.keys();
+    document.getElementById('cache-size-text').textContent = keys.length + ' ' + t('songs');
+  }catch(e){
+    document.getElementById('cache-size-text').textContent = '0 ' + t('songs');
+  }
+}
+
+// ===== FAVORITES =====
+function getFavorites(){ try{ return JSON.parse(localStorage.getItem(FAV_KEY))||[]; }catch(e){ return []; } }
+function saveFavorites(arr){ localStorage.setItem(FAV_KEY, JSON.stringify(arr)); }
+function isFav(url){ return getFavorites().includes(url); }
+function toggleFav(url, btn){
+  let favs = getFavorites();
+  const adding = !favs.includes(url);
+  if(adding){
+    favs.push(url);
+    btn.classList.add('liked');
+    cacheAudio(url);
+  } else {
+    favs = favs.filter(u=>u!==url);
+    btn.classList.remove('liked','cached');
+    swMsg({type:'REMOVE_AUDIO', url});
+    cachedUrls.delete(url);
+  }
+  saveFavorites(favs);
+  updateCacheCounts();
+  if(currentBtab==='fav') renderFavTab();
+}
+async function cacheAudio(url){
+  swMsg({type:'CACHE_AUDIO', url});
+  let tries = 0;
+  const check = setInterval(async()=>{
+    tries++;
+    try{
+      const cache = await caches.open(FAV_CACHE);
+      const match = await cache.match(url);
+      if(match || tries > 30){
+        clearInterval(check);
+        if(match){ cachedUrls.add(url); renderAll(); updateCacheCounts(); }
+      }
+    }catch(e){ clearInterval(check); }
+  }, 2000);
+}
+function updateCacheCounts(){
+  document.getElementById('offline-count').textContent = localTracks.length;
+  document.getElementById('fav-count').textContent = getFavorites().length;
+}
+
+// ===== LOAD PLAYLIST =====
+async function loadPlaylist(){
+  try{
+    const res = await fetch(PLAYLIST_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    tracks = parseM3U(text);
+    document.getElementById('header-info').textContent = tracks.length + ' ' + t('songs');
+    refreshCachedUrls();
+    renderAll();
+    updateCacheCounts();
+  }catch(err){
+    // Offline fallback
+    const favUrls = getFavorites();
+    if(favUrls.length > 0){
+      tracks = favUrls.map(url=>({
+        title: decodeURIComponent(url.split('/').pop().replace(/\.[^.]+$/,'')),
+        url
+      }));
+      document.getElementById('header-info').textContent = t('offline') + ' · ' + tracks.length;
+      refreshCachedUrls();
+      renderAll();
+      updateCacheCounts();
+      return;
+    }
+    document.getElementById('home-content').innerHTML =
+      `<div class="state error">Yuklab bo'lmadi 😕<br><small>${err.message}</small></div>`;
+    document.getElementById('bolim-content').innerHTML =
+      `<div class="state error">Yuklab bo'lmadi 😕</div>`;
+  }
+}
+
+function parseM3U(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const result=[]; let pending=null;
+  for(const line of lines){
+    if(line.startsWith('#EXTINF')){ const c=line.indexOf(','); pending=c>=0?line.slice(c+1).trim():null; }
+    else if(line.startsWith('#')){ continue; }
+    else if(line.startsWith('http')){
+      let title=pending;
+      if(!title){ try{ const u=new URL(line); title=decodeURIComponent(u.pathname.split('/').pop().replace(/\.[a-zA-Z0-9]+$/,'')); }catch(e){ title=line; } }
+      result.push({title,url:line}); pending=null;
+    }
+  }
+  return result;
+}
+
+// ===== RENDER =====
+function renderAll(){
+  renderList('home');
+  if(currentBtab==='internet') renderList('bolim');
+  else if(currentBtab==='offline') renderOfflineTab();
+  else renderFavTab();
+}
+
+function getFilteredList(mode){
+  let list = tracks;
+  const q = mode==='home' ? searchQuery_home : searchQuery_bolim;
+  if(q.trim()){ const ql=q.trim().toLowerCase(); list=list.filter(t=>t.title.toLowerCase().includes(ql)); }
+  return list;
+}
+
+function renderList(mode){
+  const list = getFilteredList(mode);
+  const contentEl = document.getElementById(mode===('home')?'home-content':'bolim-content');
+  const pagEl = document.getElementById(mode==='home'?'home-pagination':'bolim-pagination');
+  const pageVar = mode==='home' ? currentPage_home : currentPage_bolim;
+
+  if(list.length===0){
+    contentEl.innerHTML = `<div class="state">${t('noResult')}</div>`;
+    pagEl.innerHTML=''; return;
+  }
+  const totalPages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
+  const page = Math.min(pageVar, totalPages);
+  if(mode==='home') currentPage_home=page; else currentPage_bolim=page;
+  const start=(page-1)*PAGE_SIZE;
+  const items=list.slice(start,start+PAGE_SIZE);
+
+  contentEl.innerHTML = '<div class="tracklist">'+items.map((track,i)=>{
+    const gi=tracks.indexOf(track), liked=isFav(track.url), cached=cachedUrls.has(track.url);
+    const playing=(track.url===currentPlayingUrl());
+    return `<div class="track ${playing?'playing':''}" data-url="${ea(track.url)}">
+      <button class="play-btn" onclick="playFromAll(${gi})">
+        ${playing&&isPlaying?pauseIcon():playIcon()}
+      </button>
+      <div class="meta">
+        <div class="name">${eh(track.title)}</div>
+        <div class="sub">${playing&&isPlaying?`<span class="eq"><span></span><span></span><span></span><span></span></span> ${t('playing')}`:(cached?t('saved'):'MP3')}</div>
+      </div>
+      <button class="heart-btn ${liked?'liked':''} ${cached?'cached':''}" onclick="toggleFav('${ea(track.url)}',this)" title="">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 8.5 2.5 5 6 5c2 0 3.5 1.2 4.5 2.7.3.4.5.7.5.7s.2-.3.5-.7C12.5 6.2 14 5 16 5c3.5 0 5.5 3.5 3.5 7-2.5 4.5-9.5 9-9.5 9z" stroke-width="1.6"/></svg>
+        <span class="cache-dot"></span>
+      </button>
+      <a class="dl-btn" href="${ea(track.url)}" download="${ea(track.title)}.mp3" target="_blank">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+      </a>
+    </div>`;
+  }).join('')+'</div>';
+
+  // pagination
+  if(totalPages<=1){ pagEl.innerHTML=''; return; }
+  let ph=`<button class="page-btn" ${page===1?'disabled':''} onclick="goPg('${mode}',${page-1})">‹</button>`;
+  let pages=[];
+  if(totalPages<=7) pages=Array.from({length:totalPages},(_,i)=>i+1);
+  else{
+    pages=[1]; let lo=Math.max(2,page-1),hi=Math.min(totalPages-1,page+1);
+    if(lo>2) pages.push('...');
+    for(let p=lo;p<=hi;p++) pages.push(p);
+    if(hi<totalPages-1) pages.push('...');
+    pages.push(totalPages);
+  }
+  pages.forEach(p=>{ if(p==='...') ph+=`<span class="page-dots">…</span>`; else ph+=`<button class="page-btn ${p===page?'active':''}" onclick="goPg('${mode}',${p})">${p}</button>`; });
+  ph+=`<button class="page-btn" ${page===totalPages?'disabled':''} onclick="goPg('${mode}',${page+1})">›</button>`;
+  pagEl.innerHTML=ph;
+}
+
+function goPg(mode, p){
+  if(mode==='home') currentPage_home=p; else currentPage_bolim=p;
+  renderList(mode);
+  document.getElementById('page-'+activePage).scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderOfflineTab(){
+  const el = document.getElementById('offline-content');
+  if(localTracks.length===0){
+    el.innerHTML=`<div class="offline-empty">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <h3>Hali fayl qo'shilmagan</h3>
+      <p>Yuqoridagi "Papka tanlash" tugmasi orqali telefondagi papkani tanlang — ichidagi mp3 fayllar avtomatik qo'shiladi</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML='<div class="tracklist">'+localTracks.map((track)=>{
+    const playing=(track.id===currentLocalId);
+    return `<div class="track ${playing?'playing':''}">
+      <button class="play-btn" onclick="playLocalTrack('${ea(track.id)}')">
+        ${playing&&isPlaying?pauseIcon():playIcon()}
+      </button>
+      <div class="meta">
+        <div class="name">${eh(track.title)}</div>
+        <div class="sub">${playing&&isPlaying?`<span class="eq"><span></span><span></span><span></span><span></span></span> ${t('playing')}`:'Telefon xotirasi'}</div>
+      </div>
+      <button class="local-remove-btn" onclick="removeLocalTrack('${ea(track.id)}')" title="O'chirish">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function renderFavTab(){
+  const el = document.getElementById('fav-content');
+  const favs = new Set(getFavorites());
+  const favTracks = tracks.filter(t=>favs.has(t.url));
+  if(favTracks.length===0){
+    el.innerHTML=`<div class="state">${t('noFav')}<br><small>❤️ ni bosing</small></div>`;
+    return;
+  }
+  el.innerHTML='<div class="tracklist">'+favTracks.map((track,gi)=>{
+    const cached=cachedUrls.has(track.url), playing=(track.url===currentPlayingUrl());
+    return `<div class="track ${playing?'playing':''}">
+      <button class="play-btn" onclick="playTrack('${ea(track.url)}','${eh(track.title)}')">
+        ${playing&&isPlaying?pauseIcon():playIcon()}
+      </button>
+      <div class="meta">
+        <div class="name">${eh(track.title)}</div>
+        <div class="sub">${playing&&isPlaying?`<span class="eq"><span></span><span></span><span></span><span></span></span> ${t('playing')}`:(cached?t('saved'):'MP3')}</div>
+      </div>
+      <button class="heart-btn liked ${cached?'cached':''}" onclick="toggleFav('${ea(track.url)}',this)">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.5 8.5 2.5 5 6 5c2 0 3.5 1.2 4.5 2.7.3.4.5.7.5.7s.2-.3.5-.7C12.5 6.2 14 5 16 5c3.5 0 5.5 3.5 3.5 7-2.5 4.5-9.5 9-9.5 9z" stroke-width="1.6" fill="var(--accent)" stroke="var(--accent)"/></svg>
+        <span class="cache-dot"></span>
+      </button>
+      <a class="dl-btn" href="${ea(track.url)}" download="${eh(track.title)}.mp3" target="_blank">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+      </a>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+// ===== SEARCH =====
+function onSearch(val, mode){
+  if(mode==='home'){ searchQuery_home=val; currentPage_home=1; renderList('home'); }
+  else { searchQuery_bolim=val; currentPage_bolim=1; renderList('bolim'); }
+}
+function clearSearch(mode){
+  if(mode==='home'){ searchQuery_home=''; document.getElementById('search-input').value=''; currentPage_home=1; renderList('home'); }
+  else { searchQuery_bolim=''; document.getElementById('search-bolim').value=''; currentPage_bolim=1; renderList('bolim'); }
+}
+
+// ===== PLAYER =====
+const audio = document.getElementById('audio');
+const miniBar = document.getElementById('mini-bar');
+const miniName = document.getElementById('mini-name');
+const miniIcon = document.getElementById('mini-play-icon');
+const playerOverlay = document.getElementById('player-overlay');
+const modalTrackName = document.getElementById('modal-track-name');
+const modalPlayIcon = document.getElementById('modal-play-icon');
+const progressFill = document.getElementById('progress-fill');
+const progressThumb = document.getElementById('progress-thumb');
+const timeCur = document.getElementById('time-cur');
+const timeDur = document.getElementById('time-dur');
+const miniFill = document.getElementById('mini-fill');
+
+function openPlayer(){ playerOverlay.classList.add('open'); startEqAnimation(); }
+function closePlayer(){ playerOverlay.classList.remove('open'); stopEqAnimation(); }
+
+document.getElementById('progress-wrap').addEventListener('click', function(e){
+  if(!audio.duration) return;
+  const rect=this.getBoundingClientRect();
+  audio.currentTime=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*audio.duration;
+});
+
+audio.addEventListener('timeupdate',()=>{
+  if(!audio.duration) return;
+  const pct=(audio.currentTime/audio.duration)*100;
+  progressFill.style.width=pct+'%';
+  progressThumb.style.left=pct+'%';
+  miniFill.style.width=pct+'%';
+  timeCur.textContent=fmtTime(audio.currentTime);
+  timeDur.textContent=fmtTime(audio.duration);
+});
+
+function fmtTime(s){ if(isNaN(s)) return '0:00'; return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+function skipBy(sec){ audio.currentTime=Math.max(0,Math.min(audio.duration||0,audio.currentTime+sec)); }
+
+// ===== EQUALIZER (Web Audio API, shadow-element architecture) =====
+// Main #audio always plays normally and is never connected to Web Audio,
+// so playback can never be silenced by CORS issues. When the user enables
+// the equalizer, a hidden #audio-eq element mirrors playback and is routed
+// through the EQ filter chain + analyser. If that source turns out to be
+// CORS-tainted (silent), we automatically fall back: keep #audio audible
+// and disable the EQ UI.
+const EQ_BANDS = [
+  {freq:60,  label:'60'},
+  {freq:170, label:'170'},
+  {freq:350, label:'350'},
+  {freq:1000,label:'1K'},
+  {freq:3500,label:'3.5K'},
+  {freq:10000,label:'10K'}
+];
+const EQ_PRESETS = {
+  flat:    {name:'Flat',     gains:[0,0,0,0,0,0]},
+  bass:    {name:'Bass Boost', gains:[8,6,3,0,0,0]},
+  treble:  {name:'Treble Boost', gains:[0,0,0,2,6,8]},
+  vocal:   {name:'Vokal',    gains:[-2,-1,2,4,3,0]},
+  rock:    {name:'Rock',     gains:[5,3,-2,-1,3,5]},
+  pop:     {name:'Pop',      gains:[2,4,2,0,2,3]},
+  electronic:{name:'Electronic', gains:[6,4,0,0,3,5]}
+};
+
+const audioEq = document.getElementById('audio-eq');
+let audioCtx=null, sourceNode=null, analyserNode=null, filterNodes=[];
+let eqReady=false, eqActive=false, eqUnsupported=false, eqAnimId=null, eqSyncId=null;
+let eqGains = JSON.parse(localStorage.getItem('eq_gains')||'null') || [0,0,0,0,0,0];
+
+function buildAudioGraph(){
+  if(eqReady) return true;
+  try{
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(audioEq);
+    filterNodes = EQ_BANDS.map((band,i)=>{
+      const f = audioCtx.createBiquadFilter();
+      f.type = i===0 ? 'lowshelf' : (i===EQ_BANDS.length-1 ? 'highshelf' : 'peaking');
+      f.frequency.value = band.freq;
+      if(f.type==='peaking') f.Q.value = 1;
+      f.gain.value = eqGains[i] || 0;
+      return f;
+    });
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 64;
+    analyserNode.smoothingTimeConstant = 0.8;
+
+    let prev = sourceNode;
+    filterNodes.forEach(f=>{ prev.connect(f); prev=f; });
+    prev.connect(analyserNode);
+    analyserNode.connect(audioCtx.destination);
+
+    eqReady = true;
+    return true;
+  }catch(e){
+    console.warn('EQ graph init failed:', e.message);
+    eqReady = false;
+    return false;
+  }
+}
+
+function startEqSync(){
+  stopEqSync();
+  eqSyncId = setInterval(()=>{
+    if(!eqActive) return;
+    if(audio.src !== audioEq.src){
+      audioEq.src = audio.src;
+      audioEq.currentTime = audio.currentTime;
+    }
+    if(Math.abs(audioEq.currentTime - audio.currentTime) > 0.35){
+      audioEq.currentTime = audio.currentTime;
+    }
+    if(audio.paused && !audioEq.paused) audioEq.pause();
+    if(!audio.paused && audioEq.paused) audioEq.play().catch(()=>{});
+  }, 300);
+}
+function stopEqSync(){ if(eqSyncId){ clearInterval(eqSyncId); eqSyncId=null; } }
+
+function enableEqualizer(){
+  if(eqUnsupported) return false;
+  if(!buildAudioGraph()) { eqUnsupported=true; return false; }
+  audioEq.src = audio.src;
+  audioEq.currentTime = audio.currentTime;
+  audioEq.muted = false;
+  if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
+  if(!audio.paused) audioEq.play().catch(()=>{});
+  eqActive = true;
+  audio.muted = true;
+  startEqSync();
+  checkEqSilence();
+  return true;
+}
+
+function disableEqualizer(){
+  eqActive = false;
+  stopEqSync();
+  audio.muted = false;
+  audioEq.pause();
+}
+
+function checkEqSilence(){
+  setTimeout(()=>{
+    if(!eqActive || !analyserNode) return;
+    if(audioEq.paused) return; // nothing to check yet
+    const buf = new Uint8Array(analyserNode.frequencyBinCount);
+    analyserNode.getByteFrequencyData(buf);
+    const hasSignal = buf.some(v=>v>0);
+    if(!hasSignal){
+      eqUnsupported = true;
+      disableEqualizer();
+      renderEqUnsupported();
+      const toggle = document.getElementById('eq-toggle-btn');
+      const panel = document.getElementById('eq-panel');
+      toggle.classList.remove('active');
+      panel.classList.remove('open');
+    }
+  }, 900);
+}
+
+function setEqGain(i, value){
+  eqGains[i] = value;
+  localStorage.setItem('eq_gains', JSON.stringify(eqGains));
+  if(filterNodes[i]) filterNodes[i].gain.value = value;
+  highlightMatchingPreset();
+}
+
+function applyPreset(key){
+  const preset = EQ_PRESETS[key];
+  if(!preset) return;
+  eqGains = preset.gains.slice();
+  localStorage.setItem('eq_gains', JSON.stringify(eqGains));
+  filterNodes.forEach((f,i)=>{ if(f) f.gain.value = eqGains[i]; });
+  renderEqSliders();
+  highlightActivePreset(key);
+}
+
+function resetEqualizer(){
+  applyPreset('flat');
+}
+
+function highlightMatchingPreset(){
+  let matched = null;
+  for(const key in EQ_PRESETS){
+    if(EQ_PRESETS[key].gains.every((g,i)=>g===eqGains[i])){ matched=key; break; }
+  }
+  highlightActivePreset(matched);
+}
+function highlightActivePreset(key){
+  document.querySelectorAll('.eq-preset-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.preset===key);
+  });
+}
+
+function renderEqPresets(){
+  const el = document.getElementById('eq-presets');
+  el.innerHTML = Object.keys(EQ_PRESETS).map(key=>
+    `<button class="eq-preset-btn" data-preset="${key}" onclick="applyPreset('${key}')">${EQ_PRESETS[key].name}</button>`
+  ).join('');
+  highlightMatchingPreset();
+}
+
+function renderEqSliders(){
+  const el = document.getElementById('eq-sliders');
+  el.innerHTML = EQ_BANDS.map((band,i)=>{
+    const val = eqGains[i] || 0;
+    return `<div class="eq-band">
+      <div class="eq-band-value" id="eq-val-${i}">${val>0?'+':''}${val}</div>
+      <div class="eq-slider-wrap">
+        <input type="range" min="-12" max="12" step="1" value="${val}"
+          oninput="setEqGain(${i}, parseInt(this.value)); document.getElementById('eq-val-${i}').textContent=(this.value>0?'+':'')+this.value;">
+      </div>
+      <div class="eq-band-label">${band.label}</div>
+    </div>`;
+  }).join('');
+  highlightMatchingPreset();
+}
+
+function renderEqUnsupported(){
+  document.getElementById('eq-presets').innerHTML='';
+  document.getElementById('eq-sliders').innerHTML =
+    `<div class="state" style="padding:20px 10px;font-size:0.82rem;">Bu qo'shiq manbai uchun ekvalayzer ishlamaydi (server cheklovi)</div>`;
+}
+
+function toggleEqPanel(){
+  const panel = document.getElementById('eq-panel');
+  const btn = document.getElementById('eq-toggle-btn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open', opening);
+  btn.classList.toggle('active', opening);
+
+  if(opening){
+    if(eqUnsupported){ renderEqUnsupported(); return; }
+    const ok = enableEqualizer();
+    if(!ok){ renderEqUnsupported(); btn.classList.remove('active'); panel.classList.remove('open'); return; }
+    renderEqPresets();
+    renderEqSliders();
+  } else {
+    disableEqualizer();
+  }
+}
+
+// Keep shadow element in sync when track changes while EQ is active
+audio.addEventListener('loadstart', ()=>{
+  if(eqActive){ audioEq.src = audio.src; }
+});
+audio.addEventListener('seeked', ()=>{
+  if(eqActive) audioEq.currentTime = audio.currentTime;
+});
+
+// ===== VISUAL EQUALIZER (canvas) =====
+const eqCanvas = document.getElementById('eq-canvas');
+const eqCtx = eqCanvas.getContext('2d');
+let eqBarsData = new Uint8Array(32);
+
+function resizeEqCanvas(){
+  const rect = eqCanvas.parentElement.getBoundingClientRect();
+  eqCanvas.width = rect.width * (window.devicePixelRatio||1);
+  eqCanvas.height = rect.height * (window.devicePixelRatio||1);
+}
+
+function drawEqFrame(){
+  const w = eqCanvas.width, h = eqCanvas.height;
+  eqCtx.clearRect(0,0,w,h);
+
+  let data;
+  if(eqReady && analyserNode && isPlaying){
+    analyserNode.getByteFrequencyData(eqBarsData);
+    data = eqBarsData;
+  } else if(isPlaying){
+    // fallback animated bars when analyser unavailable (e.g. CORS)
+    for(let i=0;i<eqBarsData.length;i++){
+      const target = 40 + Math.random()*120;
+      eqBarsData[i] = eqBarsData[i]*0.7 + target*0.3;
+    }
+    data = eqBarsData;
+  } else {
+    // idle: flat low bars
+    for(let i=0;i<eqBarsData.length;i++) eqBarsData[i]*=0.85;
+    data = eqBarsData;
+  }
+
+  const barCount = 32;
+  const gap = w*0.012;
+  const barW = (w - gap*(barCount-1))/barCount;
+  const purple = getComputedStyle(document.documentElement).getPropertyValue('--purple').trim() || '#8b6cff';
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f5b942';
+
+  for(let i=0;i<barCount;i++){
+    const v = data[Math.floor(i*data.length/barCount)] || 0;
+    let barH = (v/255) * h * 0.95;
+    if(barH < h*0.04) barH = h*0.04;
+    const x = i*(barW+gap);
+    const y = h - barH;
+    const grad = eqCtx.createLinearGradient(0,y,0,h);
+    grad.addColorStop(0, accent);
+    grad.addColorStop(1, purple);
+    eqCtx.fillStyle = grad;
+    const r = Math.min(barW/2, 4*(window.devicePixelRatio||1));
+    roundRectPath(eqCtx, x, y, barW, barH, r);
+    eqCtx.fill();
+  }
+}
+
+function roundRectPath(ctx,x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function startEqAnimation(){
+  resizeEqCanvas();
+  if(eqAnimId) return;
+  const loop = ()=>{ drawEqFrame(); eqAnimId = requestAnimationFrame(loop); };
+  eqAnimId = requestAnimationFrame(loop);
+}
+function stopEqAnimation(){
+  if(eqAnimId){ cancelAnimationFrame(eqAnimId); eqAnimId=null; }
+}
+window.addEventListener('resize', ()=>{ if(playerOverlay.classList.contains('open')) resizeEqCanvas(); });
+
+function currentPlayingUrl(){
+  return (currentIndex>=0 && tracks[currentIndex]) ? tracks[currentIndex].url : null;
+}
+
+function playFromAll(gi){
+  const track = tracks[gi];
+  if(!track) return;
+  if(currentIndex===gi && !audio.paused){ audio.pause(); return; }
+  currentIndex=gi;
+  currentLocalId=null;
+  audio.src=track.url;
+  audio.play().catch(()=>{});
+}
+
+function playTrack(url, title){
+  const idx = tracks.findIndex(t=>t.url===url);
+  if(idx>=0){ playFromAll(idx); return; }
+  // play directly (offline track not in main list)
+  currentLocalId=null;
+  audio.src=url;
+  audio.play().catch(()=>{});
+  miniName.textContent=title;
+  modalTrackName.textContent=title;
+  miniBar.classList.add('show');
+}
+
+audio.addEventListener('play',()=>{
+  isPlaying=true;
+  const track=tracks[currentIndex];
+  if(track){ miniName.textContent=track.title; modalTrackName.textContent=track.title; }
+  const pp=`<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>`;
+  miniIcon.innerHTML=pp; modalPlayIcon.innerHTML=pp;
+  miniBar.classList.add('show');
+  renderAll();
+});
+audio.addEventListener('pause',()=>{
+  isPlaying=false;
+  const pp=`<path d="M8 5v14l11-7z"/>`;
+  miniIcon.innerHTML=pp; modalPlayIcon.innerHTML=pp;
+  renderAll();
+});
+audio.addEventListener('ended',()=>{
+  if(repeatMode===2){ audio.currentTime=0; audio.play().catch(()=>{}); }
+  else if(currentLocalId!==null){ nextLocalTrack(); }
+  else nextTrack();
+});
+
+function togglePlay(){
+  if(currentIndex===-1 && !currentLocalId && !audio.src){ if(tracks.length) playFromAll(0); return; }
+  if(audio.paused) audio.play().catch(()=>{});
+  else audio.pause();
+}
+
+function nextTrack(){
+  if(currentLocalId!==null){ nextLocalTrack(); return; }
+  if(!tracks.length) return;
+  currentLocalId=null;
+  if(shuffleOn){
+    if(!shuffleOrder.length) buildShuffle();
+    const pos=shuffleOrder.indexOf(currentIndex);
+    currentIndex=shuffleOrder[(pos+1)%shuffleOrder.length];
+  } else {
+    currentIndex=repeatMode===1?(currentIndex+1)%tracks.length:Math.min(currentIndex+1,tracks.length-1);
+  }
+  audio.src=tracks[currentIndex].url;
+  audio.play().catch(()=>{});
+  const np=Math.floor(currentIndex/PAGE_SIZE)+1;
+  if(np!==currentPage_home) currentPage_home=np;
+  renderAll();
+}
+
+function prevTrack(){
+  if(currentLocalId!==null){ prevLocalTrack(); return; }
+  if(!tracks.length) return;
+  if(audio.currentTime>3){ audio.currentTime=0; return; }
+  currentLocalId=null;
+  currentIndex=(currentIndex-1+tracks.length)%tracks.length;
+  audio.src=tracks[currentIndex].url;
+  audio.play().catch(()=>{});
+  renderAll();
+}
+
+function toggleShuffle(){
+  shuffleOn=!shuffleOn;
+  document.getElementById('btn-shuffle').classList.toggle('active',shuffleOn);
+  if(shuffleOn) buildShuffle();
+}
+function buildShuffle(){
+  shuffleOrder=Array.from({length:tracks.length},(_,i)=>i);
+  for(let i=tracks.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffleOrder[i],shuffleOrder[j]]=[shuffleOrder[j],shuffleOrder[i]]; }
+}
+function toggleRepeat(){
+  repeatMode=(repeatMode+1)%3;
+  const btn=document.getElementById('btn-repeat');
+  btn.classList.toggle('active',repeatMode>0);
+  btn.style.outline=repeatMode===2?'2px solid var(--purple)':'';
+}
+
+function playIcon(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`; }
+function pauseIcon(){ return `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>`; }
+function eh(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ea(s){ return String(s).replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+
+loadPlaylist();
+loadLocalTracks();
+</script>
+</body>
+</html>
